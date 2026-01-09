@@ -1,5 +1,5 @@
 [package]
-name = "image-tool-rs"
+name = "pixie"
 version = "0.1.0"
 edition = "2021"
 description = "Fast image resizer and optimizer in Rust"

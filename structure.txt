@@ -1,0 +1,16 @@
+image-tool-rs/
+├── Cargo.toml
+├── src/
+│   ├── main.rs          # CLI entry point
+│   ├── lib.rs           # Library interface
+│   ├── cli.rs           # Command-line parsing
+│   ├── loader.rs        # Image loading logic
+│   ├── resizer.rs       # Resizing algorithms
+│   ├── compressor.rs    # Compression & optimization
+│   ├── metadata.rs      # EXIF/metadata handling
+│   ├── batch.rs         # Batch processing with rayon
+│   └── utils.rs         # Helper functions
+├── tests/
+│   └── integration.rs   # Integration tests
+└── examples/
+    └── basic_usage.rs   # Example usage

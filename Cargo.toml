@@ -10,7 +10,7 @@ license = "MIT"
 image = "0.24"
 imageproc = "0.23"
 rayon = "1.10"
-exif = "0.6"
+exif = { git = "https://github.com/P-T-P/exif" }
 clap = { version = "4.0", features = ["derive"] }
 walkdir = "2.5"
 log = "0.4"

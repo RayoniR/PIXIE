@@ -2,6 +2,10 @@
 use std::path::Path;
 use thiserror::Error;
 
+pub mod processor;
+
+pub use processor::*;
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ResizeAlgorithm {
     Nearest,

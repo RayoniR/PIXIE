@@ -10,7 +10,7 @@ license = "MIT"
 image = { version = "0.25", features = ["jpeg", "png", "webp", "tiff", "gif", "bmp"] }
 imageproc = "0.23"
 rayon = "1.10"
-exif = "0.10"
+exif = "0.0.1"
 #kamadak-exif = "0.6.1"
 clap = { version = "4.0", features = ["derive"] }
 walkdir = "2.5"

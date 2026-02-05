@@ -1,6 +1,7 @@
 // pixie/src/processors/loader.rs
 use crate::core::{ImageToolError, Result};
 use image::{DynamicImage, ImageFormat, ImageReader, GenericImageView};
+use crate::utils::image_format_to_string;
 use std::path::Path;
 
 #[derive(Clone)]
@@ -69,7 +70,7 @@ impl Loader {
             .with_guessed_format()?;
         
         let format = reader.format()
-            .map(|f| f.to_string())
+            .map(|f| image_format_to_string(f))
             .unwrap_or_else(|| "Unknown".to_string());
         
         let dimensions = reader.into_dimensions()?;

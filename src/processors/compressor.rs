@@ -1,7 +1,7 @@
 // pixie/src/processors/compressor.rs
 use crate::core::{ImageToolError, Result};
 use image::{DynamicImage, ImageFormat};
-use image::codecs::ImageOutputFormat;
+use image::ImageOutputFormat;
 use oxipng::{optimize_from_memory, Options};
 use std::fs::File;
 use std::io::{BufWriter, Cursor};

@@ -148,37 +148,47 @@ impl MetadataProcessor {
         let latitude = self.degrees_to_decimal(lat, lat_ref)?;
         let longitude = self.degrees_to_decimal(lon, lon_ref)?;
         let altitude = alt.and_then(|a| {
-            let value = a.value.get_rational(0).ok_or_else(|| exif::Error::InvalidFormat("No rational value"))?;
-            let mut altitude = value.to_f64();
-            
-            // Check if altitude is below sea level
-            if let Some(ref_field) = alt_ref {
-                if ref_field.value.get_uint(0) == Some(1) {
-                    altitude = -altitude;
+            match a.value {
+                exif::Value::Rational(ref rats) if !rats.is_empty() => {
+                    let rational = rats[0];
+                    let mut altitude = rational.numerator as f64 / rational.denominator as f64;
+                    if let Some(ref_field) = alt_ref {
+                        if let exif::Value::Ascii(ref ascii) = ref_field.value {
+                            if !ascii.is_empty() && ascii[0][0] == 1 {
+                                altitude = -altitude;
+                            }
+                        }
+                    }
+                    Some(altitude)
                 }
+                _ => None,
             }
-            Some(altitude)
         });
 
         Some((latitude, longitude, altitude))
     }
 
     fn degrees_to_decimal(&self, degrees: &exif::Field, ref_field: &exif::Field) -> Option<f64> {
-        let components = degrees.value.as_rational()
-            .ok_or_else(|| exif::Error::InvalidFormat("Not a rational value"))?;
+        let components = match &degrees.value {
+            exif::Value::Rational(rats) => rats,
+        _ => return None,
+        }
         if components.len() < 3 {
             return None;
         }
 
-        let deg = components[0].to_f64();
-        let min = components[1].to_f64();
-        let sec = components[2].to_f64();
+        let deg = components[0].numerator as f64 / components[0].denominator as f64;
+        let min = components[1].numerator as f64 / components[1].denominator as f64;
+        let sec = components[2].numerator as f64 / components[2].denominator as f64;
 
         let decimal = deg + (min / 60.0) + (sec / 3600.0);
 
         // Apply reference (N/S, E/W)
-        let ref_value = ref_field.value.get_string()
-            .ok_or_else(|| exif::Error::InvalidFormat("Not a string value"))?;
+        let ref_value = match &ref_field.value {
+            exif::Value::Ascii(ascii) if !ascii.is_empty() => ascii[0].as_slice(),
+            _ => return None,
+        };
+        
         match ref_value.as_slice() {
             b"S" | b"W" => Some(-decimal),
             _ => Some(decimal),
@@ -188,13 +198,21 @@ impl MetadataProcessor {
     pub fn get_camera_info(&self, exif: &Exif) -> Option<(String, String)> {
         let make = exif.get_field(Tag::Make, In::PRIMARY)
             .and_then(|f| {
-                let display = f.value.display_as(f.tag);
-                Some(format!("{}", display))
+                match &f.value {
+                    exif::Value::Ascii(ascii) => {
+                        String::from_utf8(ascii[0].clone()).ok()
+                    }
+                    _ => None,
+                }
             });
         let model = exif.get_field(Tag::Model, In::PRIMARY)
             .and_then(|f| {
-                let display = f.value.display_as(f.tag);
-                Some(format!("{}", display))
+                match &f.value {
+                    exif::Value::Ascii(ascii) => {
+                        String::from_utf8(ascii[0].clone()).ok()
+                    }
+                    _ => None,
+                }
             });
 
         match (make, model) {

@@ -148,7 +148,7 @@ impl MetadataProcessor {
         let latitude = self.degrees_to_decimal(lat, lat_ref)?;
         let longitude = self.degrees_to_decimal(lon, lon_ref)?;
         let altitude = alt.and_then(|a| {
-            let value = a.value.get_rational(0)?;
+            let value = a.value.get_rational(0).ok_or_else(|| exif::Error::InvalidFormat("No rational value"))?;
             let mut altitude = value.to_f64();
             
             // Check if altitude is below sea level
@@ -164,7 +164,8 @@ impl MetadataProcessor {
     }
 
     fn degrees_to_decimal(&self, degrees: &exif::Field, ref_field: &exif::Field) -> Option<f64> {
-        let components = degrees.value.as_rational()?;
+        let components = degrees.value.as_rational()
+            .ok_or_else(|| exif::Error::InvalidFormat("Not a rational value"))?;
         if components.len() < 3 {
             return None;
         }
@@ -176,7 +177,8 @@ impl MetadataProcessor {
         let decimal = deg + (min / 60.0) + (sec / 3600.0);
 
         // Apply reference (N/S, E/W)
-        let ref_value = ref_field.value.get_ascii_string()?;
+        let ref_value = ref_field.value.get_string()
+            .ok_or_else(|| exif::Error::InvalidFormat("Not a string value"))?;
         match ref_value.as_slice() {
             b"S" | b"W" => Some(-decimal),
             _ => Some(decimal),
@@ -185,9 +187,15 @@ impl MetadataProcessor {
 
     pub fn get_camera_info(&self, exif: &Exif) -> Option<(String, String)> {
         let make = exif.get_field(Tag::Make, In::PRIMARY)
-            .and_then(|f| f.value.display_as(f.tag).to_string().ok());
+            .and_then(|f| {
+                let display = f.value.display_as(f.tag);
+                Some(format!("{}", display))
+            });
         let model = exif.get_field(Tag::Model, In::PRIMARY)
-            .and_then(|f| f.value.display_as(f.tag).to_string().ok());
+            .and_then(|f| {
+                let display = f.value.display_as(f.tag);
+                Some(format!("{}", display))
+            });
 
         match (make, model) {
             (Some(m), Some(modl)) => Some((m, modl)),
@@ -197,13 +205,57 @@ impl MetadataProcessor {
 
     pub fn get_exposure_info(&self, exif: &Exif) -> Option<(String, String, String, String)> {
         let exposure_time = exif.get_field(Tag::ExposureTime, In::PRIMARY)
-            .and_then(|f| f.value.display_as(f.tag).to_string().ok());
+            pub fn get_camera_info(&self, exif: &Exif) -> Option<(String, String)> {
+    let make = exif.get_field(Tag::Make, In::PRIMARY)
+        .and_then(|f| {
+            let display = f.value.display_as(f.tag);
+            Some(format!("{}", display))
+        });
+    let model = exif.get_field(Tag::Model, In::PRIMARY)
+        .and_then(|f| {
+            let display = f.value.display_as(f.tag);
+            Some(format!("{}", display))
+        });
+
+    match (make, model) {
+        (Some(m), Some(modl)) => Some((m, modl)),
+        _ => None,
+    }
+}
+
+pub fn get_exposure_info(&self, exif: &Exif) -> Option<(String, String, String, String)> {
+    let exposure_time = exif.get_field(Tag::ExposureTime, In::PRIMARY)
+        .and_then(|f| {
+            let display = f.value.display_as(f.tag);
+            Some(format!("{}", display))
+        });
+    let aperture = exif.get_field(Tag::FNumber, In::PRIMARY)
+        .and_then(|f| {
+            let display = f.value.display_as(f.tag);
+            Some(format!("{}", display))
+        });
+    let iso = exif.get_field(Tag::PhotographicSensitivity, In::PRIMARY)
+        .and_then(|f| {
+            let display = f.value.display_as(f.tag);
+            Some(format!("{}", display))
+        });
+    let focal_length = exif.get_field(Tag::FocalLength, In::PRIMARY)
+        .and_then(|f| {
+            let display = f.value.display_as(f.tag);
+            Some(format!("{}", display))
+        });
+
+    match (exposure_time, aperture, iso, focal_length) {
+        (Some(et), Some(ap), Some(i), Some(fl)) => Some((et, ap, i, fl)),
+        _ => None,
+    }
+}
         let aperture = exif.get_field(Tag::FNumber, In::PRIMARY)
-            .and_then(|f| f.value.display_as(f.tag).to_string().ok());
-        let iso = exif.get_field(Tag::IsoSpeedRatings, In::PRIMARY)
-            .and_then(|f| f.value.display_as(f.tag).to_string().ok());
+            .and_then(|f| Some(f.value.display_as(f.tag).to_string()));
+        let iso = exif.get_field(Tag::PhotographicSensitivity, In::PRIMARY)
+            .and_then(|f| Some(f.value.display_as(f.tag).to_string()));
         let focal_length = exif.get_field(Tag::FocalLength, In::PRIMARY)
-            .and_then(|f| f.value.display_as(f.tag).to_string().ok());
+            .and_then(|f| Some(f.value.display_as(f.tag).to_string()));
 
         match (exposure_time, aperture, iso, focal_length) {
             (Some(et), Some(ap), Some(i), Some(fl)) => Some((et, ap, i, fl)),

@@ -6,7 +6,7 @@ mod utils;
 pub use cli::{Algorithm, Cli, Commands};
 pub use core::{
     ImageProcessor, ImageToolError, ProcessConfig, ResizeAlgorithm, Result, 
-    ImageMetadata, ProcessingStats, validate_config
+    ImageMetadata, ProcessingStats, validate_config, OutputFormat
 };
 pub use processors::{
     BatchProcessor, Compressor, Loader, MetadataProcessor, Resizer

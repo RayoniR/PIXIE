@@ -151,7 +151,7 @@ impl MetadataProcessor {
             match a.value {
                 exif::Value::Rational(ref rats) if !rats.is_empty() => {
                     let rational = rats[0];
-                    let mut altitude = rational.numerator as f64 / rational.denominator as f64;
+                    let mut altitude = rational.num as f64 / rational.denom as f64;
                     if let Some(ref_field) = alt_ref {
                         if let exif::Value::Ascii(ref ascii) = ref_field.value {
                             if !ascii.is_empty() && ascii[0][0] == 1 {
@@ -172,14 +172,15 @@ impl MetadataProcessor {
         let components = match &degrees.value {
             exif::Value::Rational(rats) => rats,
         _ => return None,
-        }
+        };
+        
         if components.len() < 3 {
             return None;
         }
 
-        let deg = components[0].numerator as f64 / components[0].denominator as f64;
-        let min = components[1].numerator as f64 / components[1].denominator as f64;
-        let sec = components[2].numerator as f64 / components[2].denominator as f64;
+        let deg = components[0].num as f64 / components[0].denom as f64;
+        let min = components[1].num as f64 / components[1].denom as f64;
+        let sec = components[2].num as f64 / components[2].denom as f64;
 
         let decimal = deg + (min / 60.0) + (sec / 3600.0);
 
@@ -189,7 +190,7 @@ impl MetadataProcessor {
             _ => return None,
         };
         
-        match ref_value.as_slice() {
+        match ref_value {
             b"S" | b"W" => Some(-decimal),
             _ => Some(decimal),
         }

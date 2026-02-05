@@ -79,13 +79,31 @@ pub fn validate_dimensions(width: u32, height: u32) -> Result<()> {
 }
 
 pub fn get_image_info(path: &Path) -> Result<(u32, u32, String)> {
+    use image::ImageFormat;
+    
     let file = std::fs::File::open(path)?;
     let reader = image::io::Reader::new(std::io::BufReader::new(file))
         .with_guessed_format()?;
 
-    let format = reader.format()
-        .map(|f| f.to_string())
-        .unwrap_or_else(|| "Unknown".to_string());
+    let format = match reader.format() {
+        Some(ImageFormat::Jpeg) => "JPEG".to_string(),
+        Some(ImageFormat::Png) => "PNG".to_string(),
+        Some(ImageFormat::Gif) => "GIF".to_string(),
+        Some(ImageFormat::WebP) => "WebP".to_string(),
+        Some(ImageFormat::Pnm) => "PNM".to_string(),
+        Some(ImageFormat::Tiff) => "TIFF".to_string(),
+        Some(ImageFormat::Tga) => "TGA".to_string(),
+        Some(ImageFormat::Dds) => "DDS".to_string(),
+        Some(ImageFormat::Bmp) => "BMP".to_string(),
+        Some(ImageFormat::Ico) => "ICO".to_string(),
+        Some(ImageFormat::Hdr) => "HDR".to_string(),
+        Some(ImageFormat::OpenExr) => "OpenEXR".to_string(),
+        Some(ImageFormat::Farbfeld) => "Farbfeld".to_string(),
+        Some(ImageFormat::Avif) => "AVIF".to_string(),
+        Some(ImageFormat::Qoi) => "QOI".to_string(),
+        Some(_) => "Unknown".to_string(),
+        None => "Unknown".to_string(),
+    };
 
     let dimensions = reader.into_dimensions()?;
 
@@ -115,4 +133,26 @@ pub fn get_file_extension(path: &Path) -> Option<String> {
     path.extension()
         .and_then(|ext| ext.to_str())
         .map(|s| s.to_lowercase())
+}
+
+pub fn image_format_to_string(format: image::ImageFormat) -> String {
+    match format {
+        image::ImageFormat::Jpeg => "JPEG",
+        image::ImageFormat::Png => "PNG",
+        image::ImageFormat::Gif => "GIF",
+        image::ImageFormat::WebP => "WebP",
+        image::ImageFormat::Pnm => "PNM",
+        image::ImageFormat::Tiff => "TIFF",
+        image::ImageFormat::Tga => "TGA",
+        image::ImageFormat::Dds => "DDS",
+        image::ImageFormat::Bmp => "BMP",
+        image::ImageFormat::Ico => "ICO",
+        image::ImageFormat::Hdr => "HDR",
+        image::ImageFormat::OpenExr => "OpenEXR",
+        image::ImageFormat::Farbfeld => "Farbfeld",
+        image::ImageFormat::Avif => "AVIF",
+        image::ImageFormat::Qoi => "QOI",
+        _ => "Unknown",
+    }
+    .to_string()
 }
